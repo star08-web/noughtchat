@@ -1,0 +1,71 @@
+/*
+// Noughtchat - Anonymous Encrypted Chat
+// Copyright (C) 2025-present Star08-web and the Noughtchat contributors
+// Licensed under The Unlicense (UNLICENSE) - see the LICENSE file for details
+// Please don't be evil =)
+*/
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    padding: 20px;
+}
+
+#messages{
+    border: 1px solid #ddd;
+    padding: 10px;
+    height: 650px;
+    overflow-y: scroll;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    background-color: #fafafa;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+}
+
+#message-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+#send-button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+#send-button:hover {
+    background-color: #218838;
+}
+
+#delete-chat-button {
+    padding: 10px 20px;
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+    float: right;
+}
+
+#delete-chat-button:hover {
+    background-color: #c82333;
+}

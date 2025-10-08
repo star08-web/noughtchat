@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noughtchat - Anonymous Encrypted Chat</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Noughtchat</h1>
+        <p>Anonymous Encrypted Chat</p>
+    </header>
+    <main>
+        <section class="intro">
+            <h2>Welcome to Noughtchat</h2>
+            <p>Connect with others anonymously and securely. Your privacy is our priority.</p>
+        </section>
+        <section class="features">
+            <h2>Features</h2>
+            <ul>
+                <li>End-to-end encryption</li>
+                <li>No registration required</li>
+                <li>Anonymous chatting</li>
+                <li>Easy to use interface</li>
+            </ul>
+        </section>
+        <section class="get-started">
+            <h2>Get Started</h2>
+            <button id="newcht" class="start-button">Start Chatting Now</button>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; <span id="year"></span> Noughtchat. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.getElementById('newcht').addEventListener('click', newChat);
+        
+        function newChat() {
+            fetch('/create_chat', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.id) {
+                        window.location.href = `/chat/${data.id}`;
+                    } else {
+                        alert('Error creating new chat. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error creating new chat. Please try again.');
+                });
+        }
+        
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

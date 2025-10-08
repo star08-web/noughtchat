@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noughtchat</title>
+    <link rel="stylesheet" href="/chat.css">
+</head>
+
+<body>
+    <main class="container">
+        <h1>Noughtchat</h1>
+        <div id="messages"></div>
+        <input type="text" id="message-input" placeholder="Type your message...">
+        <button id="send-button">Send</button>
+        <button id="delete-chat-button">Delete Chat</button>
+        <p>Currently you are: <span id="username-label">${user}</span></p>
+    </main>
+    <script src="/socket.io/socket.io.min.js"></script>
+    <script src="/crypt.js"></script>
+    <script src="/chat.js"></script>
+</body>
+
+</html>
