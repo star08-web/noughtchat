@@ -1,0 +1,2 @@
+# noughtchat
+completely anonymous chat
