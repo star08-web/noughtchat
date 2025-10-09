@@ -1,5 +1,5 @@
 // Noughtchat - Anonymous Encrypted Chat
-// Copyright (C) 2025-present Star08-web and the Noughtchat contributors
+// Star08-web and the Noughtchat contributors - No rights reserved
 // Licensed under The Unlicense (UNLICENSE) - see the LICENSE file for details
 // Please don't be evil =)
 //

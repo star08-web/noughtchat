@@ -1,5 +1,5 @@
 // Noughtchat - Anonymous Encrypted Chat
-// Copyright (C) 2025-present Star08-web and the Noughtchat contributors
+// Star08-web and the Noughtchat contributors - No rights reserved
 // Licensed under The Unlicense (UNLICENSE) - see the LICENSE file for details
 // Please don't be evil =)
 //
@@ -10,7 +10,8 @@ const minput = document.getElementById("message-input");
 const sendButton = document.getElementById("send-button");
 const usernameLabel = document.getElementById("username-label");
 let psw = "";
-const deletebutton = document.getElementById("delete-chat-button");
+const deleteButton = document.getElementById("delete-chat-button");
+const exportButton = document.getElementById("export-chat-button");
 
 function createUserName() {
     const names = ["Red", "Blue", "Green", "Yellow", "Purple", "Orange", "Cyan", "Magenta", "Monika", "Natsuki", "Yuri", "Sayori", "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Punto", "Tipo", "Bravo", "Lento", "Veloce", "Forte", "Debole", "Panda", "Picasso", "Einstein", "Newton", "Tesla"];
@@ -24,9 +25,9 @@ function createUserName() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    psw = prompt("Inserisci la password per accedere alla chat, la password deve essere condivisa con gli altri partecipanti, altrimenti TU non potrai leggere i loro messaggi e LORO non potranno leggere i tuoi.");
+    psw = prompt("Insert the chat password (case-sensitive). make sure that the other participants know it too. If you don't have it, you won't be able to read or send messages.");
     if (!psw) {
-        alert("Noughtchat è una chat crittografata, serve obbligatoriamente una password per accedere. Verrai reindirizzato alla pagina principale.");
+        alert("Noughtchat is an encrypted chat, a password is required to access it. You will be redirected to the main page.");
         window.location.href = "/";
     }
 });
@@ -46,27 +47,49 @@ minput.addEventListener("keypress", function (e) {
     }
 });
 
-deletebutton.addEventListener("click", () => {
-    const confirmation = prompt("Sei sicuro di voler eliminare questa chat? Questa azione è irreversibile. Digita 'ELIMINA' per confermare.");
-    if (confirmation === "ELIMINA") {
+deleteButton.addEventListener("click", () => {
+    const confirmation = prompt("Are you sure you want to delete this chat? This action is irreversible. Type 'DELETE' to confirm.");
+    if (confirmation === "DELETE") {
         fetch(`/chat/${chatID}`, {
             method: 'DELETE'
         }).then(response => {
             if (response.ok) {
-                alert("Chat eliminata con successo. Verrai reindirizzato alla pagina principale.");
+                alert("Chat deleted successfully. You will be redirected to the main page.");
                 window.location.href = "/";
             }
         })
     }
 });
 
+exportButton.addEventListener("click", () => {
+    let chatContent = "Chat Export\n\n";
+    const messageElements = messages.getElementsByClassName("message");
+    for (let elem of messageElements) {
+        chatContent += elem.textContent + "\n";
+    }
+    const blob = new Blob([chatContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `chat_${chatID}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    sndMessage(`[${userName} exported the chat]`, "System");
+});
+
 function sendMessage() {
     const message = minput.value.trim();
     if (message === "") return;
+    
+    sndMessage(message);
+}
 
-    const messageData = {
+function sndMessage(message, user = userName) {
+        const messageData = {
         timestamp: new Date().toISOString(),
-        sender: userName,
+        sender: user,
         message: message
     };
 
@@ -75,7 +98,7 @@ function sendMessage() {
     encryptAES256GCM(messageString, psw).then((encrypted) => {
         const payload = JSON.stringify(encrypted);
         socket.emit("new_message", { roomId: chatID, encryptedData: payload });
-        appendMessage("<" + messageData.timestamp + "> You", message);
+        appendMessage("<" + messageData.timestamp + "> " + messageData.sender, message);
         minput.value = "";
     }).catch((err) => {
         console.error("Encryption error:", err);
@@ -115,6 +138,6 @@ socket.on("message_history", (history) => {
 });
 
 socket.on("chat_deleted", () => {
-    alert("Questa chat è stata eliminata permanentemente. Verrai reindirizzato alla pagina principale.");
+    alert("This chat has been deleted.");
     window.location.href = "/deleted";
 });

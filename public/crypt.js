@@ -1,3 +1,9 @@
+// Noughtchat - Anonymous Encrypted Chat
+// Star08-web and the Noughtchat contributors - No rights reserved
+// Licensed under The Unlicense (UNLICENSE) - see the LICENSE file for details
+// Please don't be evil =)
+//
+
 function bufToBase64(buffer) {
   return btoa(String.fromCharCode(...new Uint8Array(buffer)));
 }
