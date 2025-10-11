@@ -7,7 +7,6 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
-const fs = require("fs");
 const path = require("path");
 const betterSqlite3 = require("better-sqlite3");
 
@@ -37,7 +36,7 @@ db.prepare(`
 
 // Security Headers
 app.use((req, res, next) => {
-    res.setHeader("Content-Security-Policy", 
+    res.setHeader("Content-Security-Policy",
         "default-src 'self'; " +
         "script-src 'self' 'unsafe-inline'; " +
         "style-src 'self' 'unsafe-inline'; " +
@@ -63,12 +62,17 @@ app.get("/", (req, res) => {
     return res.sendFile(path.join(__dirname, 'frontend', 'landing.html'));
 });
 
+app.get("/liability", (req, res) => {
+    return res.sendFile(path.join(__dirname, 'frontend', 'liability.html'));
+});
+
 app.post("/create_chat", (req, res) => {
     let chatID = createSecureChatName();
     while (db.prepare("SELECT 1 FROM messages WHERE chat_id = ?").get(chatID)) {
         chatID = createSecureChatName(); // Rigenera se collisione
     }
-    db.prepare("INSERT INTO messages (chat_id, encrypted_data) VALUES (?, ?)").run(chatID, "Chat creata");
+    const encryptedData = JSON.stringify({ system: "Chat creata" });
+    db.prepare("INSERT INTO messages (chat_id, encrypted_data) VALUES (?, ?)").run(chatID, encryptedData);
     return res.json({ chat_id: chatID });
 });
 
@@ -91,30 +95,34 @@ app.delete("/chat/:id", (req, res) => {
 
 // --- WebSocket (Socket.IO) ---
 io.on("connection", (socket) => {
-  socket.on("join_room", (roomId) => {
-    if (!roomId || typeof roomId !== 'string' || roomId.length > 100) {
-        return;
-    }
-    socket.join(roomId);
-  });
+    socket.on("join_room", (roomId) => {
+        if (!roomId || typeof roomId !== 'string' || roomId.length > 100) {
+            return;
+        }
+        socket.join(roomId);
+    });
 
-  socket.on("request_message_history", (roomId) => {
-    if (!roomId || typeof roomId !== 'string') return;
-    const rows = db.prepare("SELECT encrypted_data FROM messages WHERE chat_id = ? ORDER BY timestamp ASC").all(roomId);
-    const messages = rows.map(row => row.encrypted_data);
-    socket.emit("message_history", messages);
-  });
+    socket.on("request_message_history", (roomId) => {
+        if (!roomId || typeof roomId !== 'string') return;
+        const rows = db.prepare("SELECT encrypted_data FROM messages WHERE chat_id = ? ORDER BY timestamp ASC").all(roomId);
+        const messages = rows.map(row => row.encrypted_data);
+        socket.emit("message_history", messages);
+    });
 
-  socket.on("new_message", ({ roomId, encryptedData }) => {
-    if (!roomId || !encryptedData || typeof encryptedData !== 'string') return;
+    socket.on("new_message", ({ roomId, encryptedData }) => {
+        if (!roomId || !encryptedData || typeof encryptedData !== 'string') return;
 
-    // Validazione base
-    if (encryptedData.length > 10000) {
-        return; // Messaggio troppo grande
-    }
+        // Validazione base
+        if (encryptedData.length > 10000) {
+            return; // Messaggio troppo grande
+        }
 
-    db.prepare("INSERT INTO messages (chat_id, encrypted_data) VALUES (?, ?)").run(roomId, encryptedData);
-  });
+        // Salva nel database
+        db.prepare("INSERT INTO messages (chat_id, encrypted_data) VALUES (?, ?)").run(roomId, encryptedData);
+
+        // Inoltra il messaggio a tutti i client nella stanza
+        io.to(roomId).emit("receive_message", encryptedData);
+    });
 });
 
 const PORT = process.env.PORT || 3000;
@@ -127,24 +135,24 @@ function createSecureChatName() {
 // Delete inactive chats after one hour
 function setupChatCleanup() {
     const ONE_HOUR = 60 * 60 * 1000; // 1 hour in milliseconds
-    
+
     setInterval(() => {
         try {
             console.log("Running cleanup for inactive chats...");
-            
+
             // Get all unique chat IDs
             const chats = db.prepare("SELECT DISTINCT chat_id FROM messages").all();
-            
+
             chats.forEach(chat => {
                 // Get timestamp of the most recent message
                 const lastActivity = db.prepare(
-                    "SELECT MAX(timestamp) as last_activity FROM messages WHERE chat_id = ?"
+                    "SELECT datetime(MAX(timestamp)) as last_activity FROM messages WHERE chat_id = ?"
                 ).get(chat.chat_id);
-                
+
                 if (lastActivity && lastActivity.last_activity) {
                     const lastActivityTime = new Date(lastActivity.last_activity).getTime();
                     const currentTime = new Date().getTime();
-                    
+
                     // If chat is inactive for more than an hour, delete it
                     if (currentTime - lastActivityTime > ONE_HOUR) {
                         console.log(`Deleting inactive chat: ${chat.chat_id}`);
@@ -163,5 +171,5 @@ function setupChatCleanup() {
 setupChatCleanup();
 
 server.listen(PORT, () => {
-  console.log(`✅ Server attivo su http://localhost:${PORT}`);
+    console.log(`✅ Server attivo su http://localhost:${PORT}`);
 });
