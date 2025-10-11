@@ -1,48 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noughtchat - Anonymous Encrypted Chat</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <header>
-        <h1>Noughtchat</h1>
-        <p>Anonymous Encrypted Chat</p>
-    </header>
-    <main>
-        <section class="intro">
-            <h2>Welcome to Noughtchat</h2>
-            <p>Connect with others anonymously and securely. Your privacy is our priority.</p>
-        </section>
-        <section class="features">
-            <h2>Features</h2>
-            <ul>
-                <li>End-to-end encryption</li>
-                <li>No registration required</li>
-                <li>Anonymous chatting</li>
-                <li>Easy to use interface</li>
-            </ul>
-        </section>
-        <section class="get-started">
-            <h2>Get Started</h2>
-            <button id="newcht" class="start-button">Start Chatting Now</button>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; <span id="year"></span> Noughtchat. All rights reserved.</p>
-    </footer>
 
+<body>
+    <div class="grid-container">
+        <div class="grid-item" style="margin-left: 20px;">
+            <header>
+                <h1>Noughtchat</h1>
+                <p>Anonymous Encrypted Chat</p>
+                <br>
+                <details>
+                    <summary>More Info</summary>
+                    <p>
+                        Noughtchat is a simple, anonymous, and encrypted chat application. Start a new chat session and share the link with your friends to chat securely. All messages are end-to-end encrypted, ensuring your privacy.
+                        <br><br>
+                        Features:
+                        <ul>
+                            <li>Anonymous chat sessions</li>
+                            <li>End-to-end encryption</li>
+                            <li>No account required</li>
+                        </ul>
+                        <br>
+                        Chats expire after 1 hour of inactivity and never touch the disk, remember to export your chat if you want to keep a copy!
+                    </p>
+                </details>
+            </header>
+            <br>
+            <br>
+            <br>
+            <br>
+            <button id="newcht" class="btn">Start New Chat</button>
+        </div>
+        <div class="grid-item">
+            <img class="computer" src="pc.png" alt="Computer Image">
+        </div>
+    </div>
+    <br>
+    <br>
+    <footer>
+        <p>&copy; <span id="year"></span> Noughtchat and its contributors. No rights reserved, licensed under <a href="https://opensource.org/license/unlicense/">The Unlicense</a>.</p>
+    </footer>
     <script>
         document.getElementById('newcht').addEventListener('click', newChat);
-        
+
         function newChat() {
             fetch('/create_chat', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.id) {
-                        window.location.href = `/chat/${data.id}`;
+                    if (data.chat_id) {
+                        window.location.href = `/chat/${data.chat_id}`;
                     } else {
                         alert('Error creating new chat. Please try again.');
                     }
@@ -52,8 +64,9 @@
                     alert('Error creating new chat. Please try again.');
                 });
         }
-        
+
         document.getElementById('year').textContent = new Date().getFullYear();
     </script>
 </body>
+
 </html>
