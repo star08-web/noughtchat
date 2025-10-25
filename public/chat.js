@@ -100,9 +100,8 @@ async function main() {
         psw = prompt("Insert the chat password (minimum 12 characters, mix of character types). Make sure other participants know it too.");
 
         if (!psw) {
-            alert("Noughtchat is an encrypted chat, a password is required to access it. You will be redirected to the main page.");
-            window.location.href = "/";
-            return;
+            alert("Noughtchat is an encrypted chat, a password is required to access it. Please try again.");
+            continue;
         }
 
         try {
@@ -230,6 +229,10 @@ async function main() {
             }
         }).catch((err) => {
             console.error("Decryption error:", err);
+            if (err.code === 0xA001 || err.code === 0xA002) {
+                alert("Decryption failed: Incorrect password or corrupted data, cannot continue.");
+                window.location.href = "/";
+            }
         });
     }
 
@@ -239,6 +242,9 @@ async function main() {
     });
 
     socket.on("message_history", (history) => {
+        if (history.length === 0) {
+            sndMessage("user " + userName + " created the chat", "System");
+        }
         history.forEach((encryptedData) => {
             addMessage(encryptedData);
         });

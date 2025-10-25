@@ -9,6 +9,8 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 const path = require("path");
 const betterSqlite3 = require("better-sqlite3");
+const requireKey = process.env.NC_ASKEY || false;
+const { validateKey } = require("./gum_licensemgr");
 
 const app = express();
 const server = http.createServer(app);
@@ -58,6 +60,10 @@ app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get("/require_pkey", (req, res) => {
+    return res.json({ require_key: requireKey });
+});
+
 app.get("/", (req, res) => {
     return res.sendFile(path.join(__dirname, 'frontend', 'landing.html'));
 });
@@ -66,12 +72,22 @@ app.get("/liability", (req, res) => {
     return res.sendFile(path.join(__dirname, 'frontend', 'liability.html'));
 });
 
-app.post("/create_chat", (req, res) => {
+app.post("/create_chat", async (req, res) => {
+    if (requireKey) {
+        const providedKey = req.headers['x-noughtchat-askey'];
+        if (!providedKey) {
+            return res.status(403).json({ error: "Product Key is required" });
+        }
+        const isValid = await validateKey(providedKey);
+        if (!isValid) {
+            return res.status(403).json({ error: "Invalid Product Key" });
+        }
+    }
     let chatID = createSecureChatName();
     while (db.prepare("SELECT 1 FROM messages WHERE chat_id = ?").get(chatID)) {
         chatID = createSecureChatName(); // Rigenera se collisione
     }
-    const encryptedData = JSON.stringify({ system: "Chat creata" });
+    const encryptedData = JSON.stringify({ newc: true });
     db.prepare("INSERT INTO messages (chat_id, encrypted_data) VALUES (?, ?)").run(chatID, encryptedData);
     return res.json({ chat_id: chatID });
 });
@@ -106,6 +122,17 @@ io.on("connection", (socket) => {
         if (!roomId || typeof roomId !== 'string') return;
         const rows = db.prepare("SELECT encrypted_data FROM messages WHERE chat_id = ? ORDER BY timestamp ASC").all(roomId);
         const messages = rows.map(row => row.encrypted_data);
+        // ignore the initial new chat message to not cause problems on client side
+        if (messages.length > 0 && messages[0]) {
+            try {
+                const firstMessage = JSON.parse(messages[0]);
+                if (firstMessage.newc) {
+                    messages.shift();
+                }
+            } catch (e) {
+                // If parsing fails, do nothing
+            }
+        }
         socket.emit("message_history", messages);
     });
 
@@ -125,7 +152,7 @@ io.on("connection", (socket) => {
     });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.NC_PORT || 3000;
 
 function createSecureChatName() {
     const crypto = require('crypto');

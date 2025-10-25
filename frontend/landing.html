@@ -44,21 +44,46 @@
     <br>
     <br>
     <footer>
+        <p>Powered by <a href="https://github.com/star08-web/noughtchat">Noughtchat</a></p>
         <p>&copy; <span id="year"></span> Noughtchat and its contributors. No rights reserved, licensed under <a href="https://opensource.org/license/unlicense/">The Unlicense</a>.</p>
-        <br>
         <p>Please read our <a href="/liability">liability disclaimer</a> before using the service.</p>  
     </footer>
     <script>
         document.getElementById('newcht').addEventListener('click', newChat);
-
+        let pkey_needed = false;
+        fetch('/require_pkey')
+            .then(response => response.json())
+            .then(data => {
+                pkey_needed = data.require_key;
+            })
+            .catch(error => {
+                console.error('Error fetching product key requirement status:', error);
+            });
         function newChat() {
-            fetch('/create_chat', { method: 'POST' })
+            let key = "NCHAT_PKEY-000-0000";
+            if (pkey_needed) {
+                key = prompt("This instance of Noughtchat requires a Product Key. Please enter your Product Key:");
+                if (!key) {
+                    alert('Product Key is required to create a new chat.');
+                    return;
+                }
+            }
+            fetch('/create_chat', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Noughtchat-Askey': key
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.chat_id) {
                         window.location.href = `/chat/${data.chat_id}`;
                     } else {
-                        alert('Error creating new chat. Please try again.');
+                        const errorMessage = data.error || 'Unknown error occurred.';
+                        const msg = `Error creating new chat: ${errorMessage}`;
+                        alert(msg);
+                        console.error(msg);
                     }
                 })
                 .catch(error => {

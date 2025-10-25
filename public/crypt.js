@@ -210,7 +210,10 @@ async function decryptAES256GCM(encryptedData, password) {
     );
     
     if (!isValid) {
-        throw new Error("Message integrity check failed");
+        throw {
+            "code": 0xA002,
+            "message": new Error("HMAC verification failed. Possible causes: incorrect password or corrupted data.")
+        }
     }
 
     // Decrypt
@@ -228,7 +231,10 @@ async function decryptAES256GCM(encryptedData, password) {
 
         return new TextDecoder().decode(plainBuf);
     } catch (e) {
-        throw new Error("Decryption failed: incorrect password or corrupted data");
+        throw {
+            "code": 0xA001,
+            "message": new Error("Decryption failed. Possible causes: incorrect password or corrupted data.")
+        }
     }
 }
 
